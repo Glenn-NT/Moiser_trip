@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mosier &amp; Columbia River Gorge — Trip Spot Picker for Rosia</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    // Configure warm editorial outdoor/travel palette and typography tokens
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Fraunces"', 'Georgia', 'serif'],
+            sans: ['"Inter"', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            linen: '#F7F3EB',
+            parchment: '#EFE9DD',
+            cardbg: '#FFFDF9',
+            ink: '#1E241F',
+            muted: '#5A635A',
+            pine: '#244232',
+            pineDark: '#172C21',
+            moss: '#486B54',
+            terracotta: '#B55D3D',
+            terracottaDark: '#94472B',
+            ochre: '#C98A3E',
+            sandline: '#DFD7C8',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    /* Custom editorial styling and smooth transitions */
+    body {
+      background-color: #F7F3EB;
+      color: #1E241F;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    h1, h2, h3, .editorial-title {
+      font-family: 'Fraunces', Georgia, serif;
+    }
+
+    .spot-card {
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background-color 180ms ease;
+    }
+
+    .spot-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -12px rgba(23, 44, 33, 0.16);
+    }
+
+    .spot-card.selected {
+      background-color: #F2F7F3;
+      border-color: #244232;
+      box-shadow: 0 10px 22px -12px rgba(36, 66, 50, 0.24);
+    }
+
+    /* Custom checkbox tick animation */
+    .custom-check {
+      transition: background-color 150ms ease, border-color 150ms ease;
+    }
+
+    .toast-enter {
+      animation: fadeSlideUp 220ms ease forwards;
+    }
+
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-pine selection:text-white">
+  <!-- Status / Feedback Banner (replaces alert()) -->
+  <div id="status-banner" class="fixed bottom-5 right-5 z-50 hidden max-w-sm rounded-2xl border border-pine/20 bg-pineDark px-4 py-3 text-sm font-medium text-linen shadow-xl toast-enter" role="status" aria-live="polite">
+    <div class="flex items-center gap-2.5">
+      <span id="status-dot" class="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400"></span>
+      <span id="status-text">Updated</span>
+    </div>
+  </div>
+
+  <!-- Top Editorial Header -->
+  <header class="border-b border-sandline bg-gradient-to-b from-parchment to-linen">
+    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-11">
+      <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div class="max-w-3xl space-y-3">
+          <div class="inline-flex flex-wrap items-center gap-2 rounded-full border border-sandline bg-cardbg px-3.5 py-1.5 text-xs font-semibold tracking-wide text-pine uppercase shadow-2xs">
+            <span>Nov 27–29, 2026</span>
+            <span class="text-muted">•</span>
+            <span>For Rosia</span>
+            <span class="text-muted">•</span>
+            <span>Late-Fall Gorge &amp; Coast/Valley Mood</span>
+          </div>
+          <h1 class="text-3xl font-semibold tracking-tight text-ink sm:text-4xl lg:text-[2.65rem] leading-[1.15]">
+            Mosier, Gorge &amp; Portland Weekend Trip
+          </h1>
+          <p class="text-base leading-relaxed text-muted sm:text-lg">
+            Browse curated spots for a relaxing getaway—from Black Friday outlets on the drive down to scenic Gorge viewpoints, wineries, spas, and Portland dining—check off your favorites, and export a takeaway list or <code class="rounded bg-parchment px-1.5 py-0.5 text-sm text-pine">.doc</code> itinerary.
+          </p>
+        </div>
+
+        <!-- Stay Quick Reference Card -->
+        <div class="rounded-2xl border border-sandline bg-cardbg p-4 text-sm shadow-xs sm:min-w-[290px]">
+          <div class="flex items-center justify-between gap-2 border-b border-sandline pb-2">
+            <span class="font-semibold text-pine">Home Base</span>
+            <span class="rounded-full bg-pine/10 px-2.5 py-0.5 text-xs font-semibold text-pine">Confirmed</span>
+          </div>
+          <p class="mt-2.5 font-semibold text-ink">Camp Randonnee~Cabin#2</p>
+          <p class="text-xs text-muted">1104 1st Ave, Mosier, OR 97040</p>
+          <p class="mt-1.5 text-xs text-pineDark">
+            Nov 27–29, 2026 • Check-in Fri 4:00 PM • Check-out Sun 11:00 AM
+          </p>
+        </div>
+      </div>
+
+      <!-- Late-November Conditions & Daylight Note -->
+      <div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div class="rounded-xl border border-sandline/90 bg-cardbg/80 px-4 py-3 text-xs sm:text-sm">
+          <span class="font-semibold text-terracotta">Late-Nov Weather:</span>
+          <span class="text-muted"> Crisp 40s–low 50s°F highs, cool nights, and Gorge breezes—pack layers &amp; windproof outer shells.</span>
+        </div>
+        <div class="rounded-xl border border-sandline/90 bg-cardbg/80 px-4 py-3 text-xs sm:text-sm">
+          <span class="font-semibold text-pine">Short Daylight:</span>
+          <span class="text-muted"> Sunset arrives around 4:25 PM—plan hikes and viewpoints earlier, saving wine, cider, and dinner for cozy hours.</span>
+        </div>
+        <div class="rounded-xl border border-sandline/90 bg-cardbg/80 px-4 py-3 text-xs sm:text-sm">
+          <span class="font-semibold text-ochre">Easy Pace:</span>
+          <span class="text-muted"> Everything here is within a short drive or walk of Mosier so you can unwind without rushing.</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
+      <!-- Left / Primary Column: Filters & Categorized Spot Picker -->
+      <section class="space-y-7 lg:col-span-7 xl:col-span-8" aria-label="Selectable spots">
+        <!-- Filter & Quick Action Bar -->
+        <div class="flex flex-col gap-4 rounded-2xl border border-sandline bg-cardbg p-4 shadow-2xs sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex flex-wrap items-center gap-2" id="category-filters" role="group" aria-label="Filter by category">
+            <button type="button" data-filter="all" class="filter-pill active rounded-full border border-pine bg-pine px-3.5 py-1.5 text-xs font-semibold text-white transition sm:text-sm">
+              All
+            </button>
+            <button type="button" data-filter="Black Friday Outlets" class="filter-pill rounded-full border border-sandline bg-linen px-3.5 py-1.5 text-xs font-semibold text-ink transition hover:border-pine/50 sm:text-sm">
+              Black Friday Outlets
+            </button>
+            <button type="button" data-filter="Scenic Viewpoints" class="filter-pill rounded-full border border-sandline bg-linen px-3.5 py-1.5 text-xs font-semibold text-ink transition hover:border-pine/50 sm:text-sm">
+              Scenic Viewpoints
+            </button>
+            <button type="button" data-filter="Gorge Food & Coffee" class="filter-pill rounded-full border border-sandline bg-linen px-3.5 py-1.5 text-xs font-semibold text-ink transition hover:border-pine/50 sm:text-sm">
+              Gorge Food &amp; Coffee
+            </button>
+            <button type="button" data-filter="Wineries" class="filter-pill rounded-full border border-sandline bg-linen px-3.5 py-1.5 text-xs font-semibold text-ink transition hover:border-pine/50 sm:text-sm">
+              Wineries
+            </button>
+            <button type="button" data-filter="Massage & Spas" class="filter-pill rounded-full border border-sandline bg-linen px-3.5 py-1.5 text-xs font-semibold text-ink transition hover:border-pine/50 sm:text-sm">
+              Massage &amp; Spas
+            </button>
+            <button type="button" data-filter="Portland" class="filter-pill rounded-full border border-sandline bg-linen px-3.5 py-1.5 text-xs font-semibold text-ink transition hover:border-pine/50 sm:text-sm">
+              Portland
+            </button>
+          </div>
+
+          <div class="flex items-center gap-3 text-xs font-medium text-muted">
+            <span id="visible-count">25 options</span>
+            <span>•</span>
+            <button type="button" id="clear-all-btn" class="font-semibold text-terracotta underline decoration-terracotta/40 underline-offset-2 hover:text-terracottaDark">
+              Clear picks
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Category Sections Container -->
+        <div id="categories-container" class="space-y-8"></div>
+      </section>
+
+      <!-- Right / Sticky Column: Live Selected Spots Itinerary Builder -->
+      <aside class="lg:sticky lg:top-6 lg:col-span-5 xl:col-span-4" aria-label="Selected spots itinerary builder">
+        <div class="rounded-2xl border border-sandline bg-cardbg p-5 shadow-sm sm:p-6">
+          <div class="flex items-start justify-between gap-3 border-b border-sandline pb-4">
+            <div>
+              <p class="text-xs font-semibold tracking-wider text-terracotta uppercase">Takeaway Builder</p>
+              <h2 class="mt-0.5 text-2xl font-semibold text-ink">Your Picked Spots</h2>
+            </div>
+            <span id="selected-counter" class="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-pine px-2.5 text-xs font-bold text-white">
+              0
+            </span>
+          </div>
+
+          <!-- Optional Day Grouping Toggle -->
+          <div class="mt-4 flex items-center justify-between rounded-xl bg-linen px-3.5 py-2.5 text-xs">
+            <span class="font-medium text-ink">Organize takeaway by:</span>
+            <div class="inline-flex rounded-lg border border-sandline bg-cardbg p-0.5">
+              <button type="button" id="mode-category" class="mode-btn rounded-md bg-pine px-2.5 py-1 font-semibold text-white transition">
+                Category
+              </button>
+              <button type="button" id="mode-weekend" class="mode-btn rounded-md px-2.5 py-1 font-semibold text-muted transition hover:text-ink">
+                Weekend Flow
+              </button>
+            </div>
+          </div>
+
+          <!-- Empty State vs. Selected Items List -->
+          <div id="selected-list-container" class="mt-4 max-h-[420px] space-y-4 overflow-y-auto pr-1">
+            <div id="empty-state" class="rounded-xl border border-dashed border-sandline bg-linen/70 px-4 py-8 text-center">
+              <p class="font-serif text-base font-medium text-ink">No spots selected yet</p>
+              <p class="mt-1 text-xs leading-relaxed text-muted">
+                Click any card or checkbox on the left to add trails, viewpoints, coffee, tacos, wine, or cider to Rosia's list.
+              </p>
+            </div>
+            <div id="populated-list" class="hidden space-y-4"></div>
+          </div>
+
+          <!-- Action Buttons: Copy Itinerary & Download .doc -->
+          <div class="mt-5 space-y-2.5 border-t border-sandline pt-4">
+            <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <button
+                type="button"
+                id="copy-itinerary-btn"
+                class="flex items-center justify-center gap-2 rounded-xl bg-pine px-4 py-3 text-sm font-semibold text-white shadow-xs transition hover:bg-pineDark active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
+                disabled
+              >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <span id="copy-btn-label">Copy Itinerary</span>
+              </button>
+
+              <button
+                type="button"
+                id="download-doc-btn"
+                class="flex items-center justify-center gap-2 rounded-xl bg-terracotta px-4 py-3 text-sm font-semibold text-white shadow-xs transition hover:bg-terracottaDark active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
+                disabled
+              >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Download .doc</span>
+              </button>
+            </div>
+            <p class="text-center text-[11px] text-muted">
+              Includes your selected picks with links and notes plus Camp Randonnee~Cabin#2 details (Nov 27–29, 2026).
+            </p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    /**
+     * Curated weekend spots across Black Friday outlets on the route, scenic Gorge viewpoints,
+     * Gorge food/coffee, wineries, massage/spas, and Portland dining & gardens.
+     */
+    const SPOTS = [
+      // Black Friday Outlets
+      {
+        id: 'centralia-outlets',
+        name: 'Centralia Outlets',
+        category: 'Black Friday Outlets',
+        location: 'Centralia, WA (Off I-5)',
+        url: 'https://www.centraliaoutlets.com/',
+        suggestedSlot: 'Friday Morning / Midday Drive South',
+        description: 'Easy mid-drive break ~1.5 hrs south of Seattle with Nike, Coach, and classic outlet deals without big-city chaos.'
+      },
+      {
+        id: 'columbia-gorge-outlets',
+        name: 'Columbia Gorge Outlets',
+        category: 'Black Friday Outlets',
+        location: 'Troutdale, OR (Off I-84)',
+        url: 'https://www.columbiagorgeoutlets.com/',
+        suggestedSlot: 'Friday Afternoon on the Way to Mosier',
+        description: 'Right along I-84 at the gateway to the Gorge—tax-free Oregon shopping with easy parking and low-key crowds.'
+      },
+      {
+        id: 'woodburn-premium-outlets',
+        name: 'Woodburn Premium Outlets',
+        category: 'Black Friday Outlets',
+        location: 'Woodburn, OR (~30 min south of Portland)',
+        url: 'https://www.premiumoutlets.com/outlet/woodburn',
+        suggestedSlot: 'Friday Midday or Sunday Return',
+        description: 'Largest tax-free outlet center in the Pacific Northwest with 100+ designer, athletic, and home stores.'
+      },
+
+      // Scenic Viewpoints (Easy Drive-Up & Light Strolls)
+      {
+        id: 'rowena-crest-overlook',
+        name: 'Rowena Crest Viewpoint',
+        category: 'Scenic Viewpoints',
+        location: 'Mosier / Rowena, OR',
+        url: 'https://stateparks.oregon.gov/index.cfm?do=park.profile&parkId=221',
+        suggestedSlot: 'Friday Late Afternoon or Saturday Afternoon',
+        description: 'Drive-up ridge overlook with sweeping Columbia River Gorge panoramas and famous horseshoe curves below.'
+      },
+      {
+        id: 'mosier-cape-viewpoint',
+        name: 'Mosier Cape Viewpoint',
+        category: 'Scenic Viewpoints',
+        location: 'Mosier, OR',
+        url: 'https://www.fs.usda.gov/recarea/crgnsa/recarea/?recid=29870',
+        suggestedSlot: 'Saturday Afternoon',
+        description: 'Easy, breezy short stroll right in town overlooking the Columbia River Gorge and a small seasonal waterfall.'
+      },
+      {
+        id: 'mayer-state-park',
+        name: 'Mayer State Park',
+        category: 'Scenic Viewpoints',
+        location: 'Mosier, OR',
+        url: 'https://stateparks.oregon.gov/index.cfm?do=park.profile&parkId=117',
+        suggestedSlot: 'Saturday Afternoon or Sunday Morning',
+        description: 'Scenic riverfront park minutes from Mosier with easy waterfront views, coves, and picnic spots.'
+      },
+
+      // Gorge Food & Coffee
+      {
+        id: 'randonnee-coffee-co',
+        name: 'Randonnee Coffee Co.',
+        category: 'Gorge Food & Coffee',
+        location: 'Mosier, OR',
+        url: 'https://joe.coffee/locations/or/mosier/randonnee-coffee-co-mosier/',
+        suggestedSlot: 'Saturday & Sunday Mornings',
+        description: 'Cozy local café right below Camp Randonnee in Mosier—perfect for slow morning coffee and pastries.'
+      },
+      {
+        id: 'mosier-company',
+        name: 'Mosier Company',
+        category: 'Gorge Food & Coffee',
+        location: 'Mosier, OR',
+        url: 'https://www.mosiercompany.com/',
+        suggestedSlot: 'Friday Evening or Saturday Evening',
+        description: 'Walkable neighborhood spot in Mosier for wood-fired pizzas, burgers, drinks, and a warm patio fire.'
+      },
+      {
+        id: 'riverside-hood-river',
+        name: 'Riverside',
+        category: 'Gorge Food & Coffee',
+        location: 'Hood River, OR',
+        url: 'https://www.riversidehoodriver.com/',
+        suggestedSlot: 'Friday Evening or Saturday Evening',
+        description: 'Waterfront dining with floor-to-ceiling Columbia River views, Oregon wines, and locally sourced Italian-inspired dishes.'
+      },
+      {
+        id: '3-rivers-grill',
+        name: '3 Rivers Grill',
+        category: 'Gorge Food & Coffee',
+        location: 'Hood River, OR',
+        url: 'https://www.3riversgrill.com/',
+        suggestedSlot: 'Saturday Evening',
+        description: 'Upscale date-night spot on the hill in downtown Hood River with elevated NW seafood, river views, and heated patio.'
+      },
+      {
+        id: 'solstice-wood-fire-pizza',
+        name: 'Solstice Wood Fire Pizza & Bar',
+        category: 'Gorge Food & Coffee',
+        location: 'Hood River, OR',
+        url: 'https://www.solsticewoodfirecafe.com/',
+        suggestedSlot: 'Saturday Afternoon or Evening',
+        description: 'Rustic-chic waterfront spot in Hood River pairing artisan wood-fired pizzas with local Gorge wines.'
+      },
+      {
+        id: 'celilo-restaurant-and-bar',
+        name: 'Celilo Restaurant and Bar',
+        category: 'Gorge Food & Coffee',
+        location: 'Hood River, OR',
+        url: 'https://www.celilorestaurant.com/about',
+        suggestedSlot: 'Friday Evening or Saturday Evening',
+        description: 'Intimate, seasonal Pacific Northwest dining in downtown Hood River.'
+      },
+      {
+        id: 'pfriem-family-brewers',
+        name: 'pFriem Family Brewers',
+        category: 'Gorge Food & Coffee',
+        location: 'Hood River, OR',
+        url: 'https://www.pfriembeer.com/tasting-room/hood-river-tasting-room',
+        suggestedSlot: 'Friday Evening or Saturday Evening',
+        description: 'Lively waterfront tasting room and pub in Hood River overlooking the river.'
+      },
+
+      // Wineries
+      {
+        id: 'analemma-wines',
+        name: 'Analemma Wines',
+        category: 'Wineries',
+        location: 'Mosier, OR',
+        url: 'https://analemmawines.com/',
+        suggestedSlot: 'Friday Late Afternoon or Saturday Afternoon',
+        description: 'Biodynamic Mosier estate overlooking orchards and the Gorge with sparkling wines, Pinot Noir, and small plates.'
+      },
+      {
+        id: 'idiots-grace',
+        name: "Idiot's Grace Wines",
+        category: 'Wineries',
+        location: 'Mosier, OR',
+        url: 'https://www.idiotsgrace.com/',
+        suggestedSlot: 'Saturday Afternoon',
+        description: 'Intimate hilltop winery in Mosier surrounded by pear orchards with organic European-style flights.'
+      },
+      {
+        id: 'double-strand-wine',
+        name: 'Double Strand Wine',
+        category: 'Wineries',
+        location: 'Mosier, OR',
+        url: 'https://www.doublestrandwine.com/',
+        suggestedSlot: 'Saturday Afternoon',
+        description: 'Cozy, unpretentious boutique tasting room in Mosier featuring small-lot wines plus honey and cherry blends.'
+      },
+      {
+        id: 'hiyu-wine-farm',
+        name: 'Hiyu Wine Farm',
+        category: 'Wineries',
+        location: 'Hood River, OR',
+        url: 'https://hiyuwinefarm.com/',
+        suggestedSlot: 'Saturday Afternoon',
+        description: 'Scenic vineyard and culinary wine farm tucked into the Hood River hills.'
+      },
+      {
+        id: 'the-gorge-white-house',
+        name: 'The Gorge White House',
+        category: 'Wineries',
+        location: 'Hood River, OR',
+        url: 'https://thegorgewhitehouse.com/',
+        suggestedSlot: 'Saturday Afternoon',
+        description: 'Relaxed farm and winery in the Hood River Valley with direct Mount Hood views, wine/cider flights, and lunch bites.'
+      },
+
+      // Massage & Spas
+      {
+        id: 'spa-at-lightwell',
+        name: 'Lightwell Hotel & Spa',
+        category: 'Massage & Spas',
+        location: 'Hood River, OR',
+        url: 'https://lightwellhotel.com/hood-river-wellness/spa/',
+        suggestedSlot: 'Saturday Afternoon or Evening',
+        description: 'Boutique wellness spa offering couples & relaxation massages plus a warm soaking pool, sauna, cold plunge, and rooftop bar.'
+      },
+      {
+        id: 'the-society-spa',
+        name: 'The Society Hotel Spa',
+        category: 'Massage & Spas',
+        location: 'Bingen, WA (Across from Hood River)',
+        url: 'https://bingen.thesocietyhotel.com/spa/',
+        suggestedSlot: 'Saturday Afternoon or Evening',
+        description: '95°F saltwater soaking pool, 104°F outdoor hot pool with Gorge views, cedar sauna, cold plunge, and massages.'
+      },
+      {
+        id: 'spa-remedease',
+        name: 'Spa Remedease',
+        category: 'Massage & Spas',
+        location: 'Hood River, OR',
+        url: 'https://sparemedease.com/',
+        suggestedSlot: 'Saturday Afternoon',
+        description: 'Tranquil day spa on Hood River’s west side offering customized couples, deep tissue, and relaxation massages.'
+      },
+      {
+        id: 'hood-river-salt-cave',
+        name: 'Hood River Salt Cave',
+        category: 'Massage & Spas',
+        location: 'Hood River, OR',
+        url: 'https://www.hoodriversaltcave.com/',
+        suggestedSlot: 'Saturday Afternoon',
+        description: 'Restorative Himalayan salt sanctuary sessions, sound baths, red light therapy, and warm castor oil foot detoxes.'
+      },
+
+      // Portland (Scenic Gardens, Books & Date-Night Dining)
+      {
+        id: 'portland-japanese-garden',
+        name: 'Portland Japanese Garden',
+        category: 'Portland',
+        location: 'Portland, OR (Washington Park)',
+        url: 'https://japanesegarden.org/hours-admission/',
+        suggestedSlot: 'Saturday Midday or Sunday',
+        description: 'Serene hillside Japanese gardens, koi ponds, and city/mountain overlooks in Washington Park.'
+      },
+      {
+        id: 'powells-city-of-books',
+        name: "Powell's City of Books",
+        category: 'Portland',
+        location: 'Portland, OR (Pearl District)',
+        url: 'https://www.powells.com/bookstore/powells-city-of-books',
+        suggestedSlot: 'Saturday Afternoon / Evening or Sunday',
+        description: 'Iconic four-story flagship bookstore and café in the Pearl District—great cozy indoor wandering.'
+      },
+      {
+        id: 'ox-restaurant',
+        name: 'OX Restaurant',
+        category: 'Portland',
+        location: 'Portland, OR (NE Portland)',
+        url: 'https://oxpdx.com/',
+        suggestedSlot: 'Saturday Evening',
+        description: 'Acclaimed wood-fired Pacific Northwest & Argentine-inspired dinner spot with a warm, celebratory date-night vibe.'
+      },
+      {
+        id: 'lechon-portland',
+        name: 'Lechon',
+        category: 'Portland',
+        location: 'Portland, OR (Downtown Waterfront)',
+        url: 'https://lechonpdx.com/',
+        suggestedSlot: 'Saturday Evening',
+        description: 'Vibrant downtown waterfront restaurant with shareable South American small plates, cocktails, and cozy ambiance.'
+      },
+      {
+        id: 'screen-door-eastside',
+        name: 'Screen Door Eastside',
+        category: 'Portland',
+        location: 'Portland, OR (East Burnside)',
+        url: 'https://screendoorrestaurant.com/',
+        suggestedSlot: 'Saturday Lunch or Sunday Brunch',
+        description: 'Beloved Portland spot for Southern-inspired brunch, fried chicken, and indulgent comfort plates.'
+      }
+    ];
+
+    const CATEGORY_ORDER = [
+      'Black Friday Outlets',
+      'Scenic Viewpoints',
+      'Gorge Food & Coffee',
+      'Wineries',
+      'Massage & Spas',
+      'Portland'
+    ];
+
+    // Application state
+    const state = {
+      selectedIds: new Set(),
+      activeFilter: 'all',
+      groupMode: 'category', // 'category' | 'weekend'
+    };
+
+    // DOM references
+    const categoriesContainer = document.getElementById('categories-container');
+    const filterButtons = document.querySelectorAll('.filter-pill');
+    const visibleCountEl = document.getElementById('visible-count');
+    const clearAllBtn = document.getElementById('clear-all-btn');
+    const selectedCounterEl = document.getElementById('selected-counter');
+    const emptyStateEl = document.getElementById('empty-state');
+    const populatedListEl = document.getElementById('populated-list');
+    const copyBtn = document.getElementById('copy-itinerary-btn');
+    const copyBtnLabel = document.getElementById('copy-btn-label');
+    const downloadDocBtn = document.getElementById('download-doc-btn');
+    const modeCategoryBtn = document.getElementById('mode-category');
+    const modeWeekendBtn = document.getElementById('mode-weekend');
+    const statusBanner = document.getElementById('status-banner');
+    const statusText = document.getElementById('status-text');
+
+    let toastTimeout = null;
+
+    /**
+     * Displays a brief non-blocking toast notification.
+     */
+    function showToast(message) {
+      statusText.textContent = message;
+      statusBanner.classList.remove('hidden');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        statusBanner.classList.add('hidden');
+      }, 2800);
+    }
+
+    /**
+     * Toggles selection state for a given spot ID and updates UI.
+     */
+    function toggleSpot(spotId) {
+      if (state.selectedIds.has(spotId)) {
+        state.selectedIds.delete(spotId);
+      } else {
+        state.selectedIds.add(spotId);
+      }
+      renderSpots();
+      renderSelectedItinerary();
+    }
+
+    /**
+     * Renders the categorized cards based on the active filter pill.
+     */
+    function renderSpots() {
+      const filtered = state.activeFilter === 'all'
+        ? SPOTS
+        : SPOTS.filter((s) => s.category === state.activeFilter);
+
+      visibleCountEl.textContent = `${filtered.length} ${filtered.length === 1 ? 'option' : 'options'}`;
+
+      const categoriesToShow = state.activeFilter === 'all'
+        ? CATEGORY_ORDER
+        : [state.activeFilter];
+
+      categoriesContainer.innerHTML = '';
+
+      categoriesToShow.forEach((cat) => {
+        const items = filtered.filter((s) => s.category === cat);
+        if (items.length === 0) return;
+
+        const section = document.createElement('section');
+        section.className = 'space-y-3.5';
+
+        const header = document.createElement('div');
+        header.className = 'flex items-baseline justify-between border-b border-sandline pb-2';
+        header.innerHTML = `
+          <h2 class="text-xl font-semibold text-ink sm:text-2xl">${escapeHtml(cat)}</h2>
+          <span class="text-xs font-medium text-muted">${items.length} ${items.length === 1 ? 'spot' : 'spots'}</span>
+        `;
+        section.appendChild(header);
+
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-1 gap-3.5 sm:grid-cols-2';
+
+        items.forEach((spot) => {
+          const isSelected = state.selectedIds.has(spot.id);
+          const card = document.createElement('article');
+          card.className = `spot-card rounded-2xl border p-4 ${
+            isSelected
+              ? 'selected border-pine bg-[#F2F7F3]'
+              : 'border-sandline bg-cardbg hover:border-pine/50'
+          }`;
+
+          card.innerHTML = `
+            <div class="flex items-start justify-between gap-3">
+              <div class="space-y-1">
+                <span class="inline-block rounded-full bg-linen px-2.5 py-0.5 text-[11px] font-semibold text-pine">
+                  ${escapeHtml(spot.location)}
+                </span>
+                <h3 class="text-lg font-semibold leading-snug text-ink">${escapeHtml(spot.name)}</h3>
+              </div>
+              <label class="inline-flex cursor-pointer items-center gap-1.5 select-none">
+                <input
+                  type="checkbox"
+                  class="spot-checkbox sr-only"
+                  ${isSelected ? 'checked' : ''}
+                  aria-label="Select ${escapeHtml(spot.name)}"
+                />
+                <span class="custom-check flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border ${
+                  isSelected
+                    ? 'border-pine bg-pine text-white'
+                    : 'border-sandline bg-linen text-transparent'
+                }" aria-hidden="true">
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.8" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+              </label>
+            </div>
+            <p class="mt-2 text-xs leading-relaxed text-muted sm:text-sm">${escapeHtml(spot.description)}</p>
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-sandline/70 pt-2.5 text-xs font-medium text-pineDark">
+              <a
+                href="${escapeHtml(spot.url)}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 font-semibold text-pine underline decoration-pine/40 underline-offset-2 hover:text-pineDark"
+              >
+                <span>Visit website</span>
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 3h7m0 0v7m0-7L10 14m-4 0H5a2 2 0 00-2 2v3a2 2 0 002 2h11a2 2 0 002-2v-1" />
+                </svg>
+              </a>
+              <button
+                type="button"
+                class="toggle-pick-btn font-semibold ${isSelected ? 'text-pine' : 'text-terracotta hover:text-terracottaDark'}"
+              >
+                ${isSelected ? 'Selected ✓' : 'Select spot'}
+              </button>
+            </div>
+          `;
+
+          const checkbox = card.querySelector('.spot-checkbox');
+          const toggleBtn = card.querySelector('.toggle-pick-btn');
+          checkbox.addEventListener('change', () => toggleSpot(spot.id));
+          toggleBtn.addEventListener('click', () => toggleSpot(spot.id));
+
+          grid.appendChild(card);
+        });
+
+        section.appendChild(grid);
+        categoriesContainer.appendChild(section);
+      });
+    }
+
+    /**
+     * Groups selected spots either by Category or by Weekend Flow.
+     */
+    function getGroupedSelectedSpots() {
+      const selected = SPOTS.filter((s) => state.selectedIds.has(s.id));
+
+      if (state.groupMode === 'weekend') {
+        const buckets = [
+          {
+            groupTitle: 'Friday (Nov 27) — Arrival, Views & Evening',
+            items: selected.filter((s) => s.suggestedSlot.toLowerCase().includes('friday')),
+          },
+          {
+            groupTitle: 'Saturday (Nov 28) — Daylight Trails, Wine/Cider & Dinner',
+            items: selected.filter((s) => s.suggestedSlot.toLowerCase().includes('saturday')),
+          },
+          {
+            groupTitle: 'Sunday & Anytime — Cabin Ease & Departure',
+            items: selected.filter(
+              (s) =>
+                !s.suggestedSlot.toLowerCase().includes('friday') &&
+                !s.suggestedSlot.toLowerCase().includes('saturday')
+            ),
+          },
+        ];
+        return buckets.filter((b) => b.items.length > 0);
+      }
+
+      return CATEGORY_ORDER
+        .map((cat) => ({
+          groupTitle: cat,
+          items: selected.filter((s) => s.category === cat),
+        }))
+        .filter((b) => b.items.length > 0);
+    }
+
+    /**
+     * Updates the sticky Selected Spots itinerary builder panel.
+     */
+    function renderSelectedItinerary() {
+      const count = state.selectedIds.size;
+      selectedCounterEl.textContent = String(count);
+
+      const hasSelection = count > 0;
+      copyBtn.disabled = !hasSelection;
+      downloadDocBtn.disabled = !hasSelection;
+
+      if (!hasSelection) {
+        emptyStateEl.classList.remove('hidden');
+        populatedListEl.classList.add('hidden');
+        populatedListEl.innerHTML = '';
+        return;
+      }
+
+      emptyStateEl.classList.add('hidden');
+      populatedListEl.classList.remove('hidden');
+
+      const groups = getGroupedSelectedSpots();
+      populatedListEl.innerHTML = '';
+
+      groups.forEach((group) => {
+        const groupWrap = document.createElement('div');
+        groupWrap.className = 'space-y-2';
+
+        const groupHeading = document.createElement('h3');
+        groupHeading.className = 'text-xs font-bold tracking-wider text-pine uppercase';
+        groupHeading.textContent = group.groupTitle;
+        groupWrap.appendChild(groupHeading);
+
+        group.items.forEach((spot) => {
+          const row = document.createElement('div');
+          row.className = 'flex items-start justify-between gap-2.5 rounded-xl border border-sandline bg-linen/80 px-3 py-2.5';
+          row.innerHTML = `
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-ink">${escapeHtml(spot.name)}</p>
+              <p class="text-xs text-muted">${escapeHtml(spot.location)} • ${escapeHtml(spot.description)}</p>
+              <a
+                href="${escapeHtml(spot.url)}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="mt-1 inline-block text-xs font-semibold text-pine underline decoration-pine/40 underline-offset-2 hover:text-pineDark"
+              >
+                ${escapeHtml(spot.url)}
+              </a>
+            </div>
+            <button
+              type="button"
+              class="remove-spot-btn shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-terracotta transition hover:bg-terracotta/10 hover:text-terracottaDark"
+              aria-label="Remove ${escapeHtml(spot.name)}"
+              title="Remove from itinerary"
+            >
+              Remove
+            </button>
+          `;
+
+          row.querySelector('.remove-spot-btn').addEventListener('click', () => {
+            toggleSpot(spot.id);
+          });
+
+          groupWrap.appendChild(row);
+        });
+
+        populatedListEl.appendChild(groupWrap);
+      });
+    }
+
+    /**
+     * Builds plain-text formatted itinerary for clipboard copying.
+     */
+    function buildPlainTextItinerary() {
+      const groups = getGroupedSelectedSpots();
+      const lines = [
+        'MOSIER, COLUMBIA RIVER GORGE & PORTLAND — WEEKEND PICK LIST',
+        'Dates: Friday, Nov 27 – Sunday, Nov 29, 2026',
+        'Stay: Camp Randonnee~Cabin#2, 1104 1st Ave, Mosier, OR 97040',
+        '----------------------------------------------------------------------',
+        '',
+      ];
+
+      groups.forEach((group) => {
+        lines.push(group.groupTitle.toUpperCase());
+        group.items.forEach((spot) => {
+          lines.push(`• ${spot.name} (${spot.location})`);
+          lines.push(`  Notes: ${spot.description}`);
+          lines.push(`  Link: ${spot.url}`);
+        });
+        lines.push('');
+      });
+
+      lines.push('Notes: Late-November Gorge weather is crisp (40s–low 50s°F) with early dusk (~4:25 PM).');
+      return lines.join('\n');
+    }
+
+    /**
+     * Generates and triggers download of a standalone HTML-wrapped .doc file.
+     */
+    function downloadItineraryDoc() {
+      if (state.selectedIds.size === 0) return;
+
+      const groups = getGroupedSelectedSpots();
+      const sectionsHtml = groups
+        .map(
+          (group) => `
+          <h2 style="color:#244232; font-family:Georgia,serif; font-size:15pt; margin-top:20px; margin-bottom:8px; border-bottom:1px solid #DFD7C8; padding-bottom:4px;">
+            ${escapeHtml(group.groupTitle)}
+          </h2>
+          <ul style="margin:0 0 14px 18px; padding:0;">
+            ${group.items
+              .map(
+                (spot) => `
+              <li style="margin-bottom:10px; line-height:1.45;">
+                <strong>${escapeHtml(spot.name)}</strong> <span style="color:#5A635A;">(${escapeHtml(spot.location)})</span><br/>
+                <span style="color:#2B312C;">${escapeHtml(spot.description)}</span><br/>
+                <a href="${escapeHtml(spot.url)}" style="color:#244232;">${escapeHtml(spot.url)}</a>
+              </li>
+            `
+              )
+              .join('')}
+          </ul>
+        `
+        )
+        .join('');
+
+      const docHtml = `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta charset="utf-8" />
+  <title>Mosier, Gorge &amp; Portland Trip Picks — Nov 27–29, 2026</title>
+</head>
+<body style="font-family:Calibri, Arial, sans-serif; color:#1E241F; margin:36px;">
+  <h1 style="font-family:Georgia,serif; color:#172C21; font-size:22pt; margin-bottom:6px;">
+    Mosier, Columbia River Gorge &amp; Portland Trip Picks
+  </h1>
+  <p style="color:#5A635A; font-size:11pt; margin-top:0;">
+    <strong>Dates:</strong> Nov 27–29, 2026 &nbsp;|&nbsp;
+    <strong>Stay:</strong> Camp Randonnee~Cabin#2, 1104 1st Ave, Mosier, OR 97040
+  </p>
+  <p style="background:#F7F3EB; border-left:4px solid #B55D3D; padding:10px 14px; font-size:10.5pt; color:#1E241F;">
+    <strong>Late-November Tip:</strong> Expect crisp 40s–low 50s°F daytime temperatures, occasional Gorge breezes, and early sunset around 4:25 PM.
+  </p>
+  ${sectionsHtml}
+</body>
+</html>`;
+
+      try {
+        const blob = new Blob(['\ufeff', docHtml], {
+          type: 'application/msword;charset=utf-8',
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'Mosier-Gorge-Trip-Itinerary-Nov-2026.doc';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast('Downloaded Mosier-Gorge-Trip-Itinerary-Nov-2026.doc');
+      } catch (err) {
+        showToast('Unable to start download in this browser.');
+      }
+    }
+
+    /**
+     * Copies formatted itinerary text to clipboard with fallback support.
+     */
+    async function copyItineraryToClipboard() {
+      if (state.selectedIds.size === 0) return;
+      const text = buildPlainTextItinerary();
+
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+        }
+
+        copyBtnLabel.textContent = 'Copied!';
+        showToast('Itinerary copied to clipboard for Rosia.');
+        setTimeout(() => {
+          copyBtnLabel.textContent = 'Copy Itinerary';
+        }, 1800);
+      } catch (err) {
+        showToast('Could not copy automatically—try Download .doc instead.');
+      }
+    }
+
+    /**
+     * Escapes HTML special characters for safe rendering.
+     */
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Wire filter buttons
+    filterButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.activeFilter = btn.getAttribute('data-filter');
+        filterButtons.forEach((b) => {
+          const active = b === btn;
+          b.classList.toggle('active', active);
+          b.classList.toggle('bg-pine', active);
+          b.classList.toggle('text-white', active);
+          b.classList.toggle('border-pine', active);
+          b.classList.toggle('bg-linen', !active);
+          b.classList.toggle('text-ink', !active);
+          b.classList.toggle('border-sandline', !active);
+        });
+        renderSpots();
+      });
+    });
+
+    // Wire clear all button
+    clearAllBtn.addEventListener('click', () => {
+      if (state.selectedIds.size === 0) return;
+      state.selectedIds.clear();
+      renderSpots();
+      renderSelectedItinerary();
+      showToast('Cleared all selected spots.');
+    });
+
+    // Wire grouping mode toggles
+    modeCategoryBtn.addEventListener('click', () => {
+      state.groupMode = 'category';
+      modeCategoryBtn.className = 'mode-btn rounded-md bg-pine px-2.5 py-1 font-semibold text-white transition';
+      modeWeekendBtn.className = 'mode-btn rounded-md px-2.5 py-1 font-semibold text-muted transition hover:text-ink';
+      renderSelectedItinerary();
+    });
+
+    modeWeekendBtn.addEventListener('click', () => {
+      state.groupMode = 'weekend';
+      modeWeekendBtn.className = 'mode-btn rounded-md bg-pine px-2.5 py-1 font-semibold text-white transition';
+      modeCategoryBtn.className = 'mode-btn rounded-md px-2.5 py-1 font-semibold text-muted transition hover:text-ink';
+      renderSelectedItinerary();
+    });
+
+    // Wire export actions
+    copyBtn.addEventListener('click', copyItineraryToClipboard);
+    downloadDocBtn.addEventListener('click', downloadItineraryDoc);
+
+    // Initial render
+    renderSpots();
+    renderSelectedItinerary();
+  </script>
+</body>
+</html>
